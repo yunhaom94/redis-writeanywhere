@@ -1,3 +1,28 @@
+# A Modified Redis Server To Support Write Anywhere Policy
+
+It has the following features:
+* Runs all nodes in cluster as masters, some of the node shares the same slots
+
+* Node will have a ‘group’ data structure to keep track of nodes that also responsible for the same slots
+
+* Use CLUSTER ADDSLOT to assign slots for now, make sure if the nodes are in the same group, they are assigned to the same slots. Need to make clusters actually able to assign same nodes
+
+* Every Time a node receives a query command, it will use cluster bus (or main port?) to send the same command to other commands in the cluster, thus data are synced
+
+* No consensus protocol yet
+
+* Based on Redis 4.0.10 source code posted on official website
+
+
+
+
+
+
+
+
+
+
+--------------
 This README is just a fast *quick start* document. You can find more detailed documentation at [redis.io](https://redis.io).
 
 What is Redis?
