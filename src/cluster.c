@@ -1927,8 +1927,10 @@ int clusterProcessPacket(clusterLink *link) {
         /* 1) If the sender of the message is a master, and we detected that
          *    the set of slots it claims changed, scan the slots to see if we
          *    need to update our configuration. */
-        if (sender && nodeIsMaster(sender) && dirty_slots)
-            clusterUpdateSlotsConfigWith(sender,senderConfigEpoch,hdr->myslots);
+        // MOD: remove clusterUpdateSlotsConfigWith() to prevent node updating its
+        // configueration when assigning slots to the same node
+        //if (sender && nodeIsMaster(sender) && dirty_slots)
+        //    clusterUpdateSlotsConfigWith(sender,senderConfigEpoch,hdr->myslots);
 
         /* 2) We also check for the reverse condition, that is, the sender
          *    claims to serve slots we know are served by a master with a
@@ -2075,8 +2077,10 @@ int clusterProcessPacket(clusterLink *link) {
 
         /* Check the bitmap of served slots and update our
          * config accordingly. */
-        clusterUpdateSlotsConfigWith(n,reportedConfigEpoch,
-            hdr->data.update.nodecfg.slots);
+        // MOD: remove clusterUpdateSlotsConfigWith() to prevent node updating its
+        // configueration when assigning slots to the same node
+        //clusterUpdateSlotsConfigWith(n,reportedConfigEpoch,
+        //    hdr->data.update.nodecfg.slots);
     } else {
         serverLog(LL_WARNING,"Received unknown packet type: %d", type);
     }
@@ -4165,7 +4169,8 @@ void clusterCommand(client *c) {
         int j, slot;
         unsigned char *slots = zmalloc(CLUSTER_SLOTS);
         int del = !strcasecmp(c->argv[1]->ptr,"delslots");
-        printf("I AM WORKING ON THIS!\n");
+        // MOD: printf
+        printf("I AM ADDING A SLOT TO THIS NDOE!\n");
         memset(slots,0,CLUSTER_SLOTS);
         /* Check that all the arguments are parseable and that all the
          * slots are not already busy. */
