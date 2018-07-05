@@ -5341,18 +5341,31 @@ clusterNode *getNodeByQuery(client *c, struct redisCommand *cmd, robj **argv, in
                  * and node. */
                 firstkey = thiskey;
                 slot = thisslot;
-                n = server.cluster->slots[slot];
 
-                /* Error: If a slot is not served, we are in "cluster down"
-                 * state. However the state is yet to be updated, so this was
-                 * not trapped earlier in processCommand(). Report the same
-                 * error to the client. */
-                if (n == NULL) {
-                    getKeysFreeResult(keyindex);
-                    if (error_code)
-                        *error_code = CLUSTER_REDIR_DOWN_UNBOUND;
-                    return NULL;
+                //MOD: check self first, because server.cluster->slots is no longer updated
+                // and we only do it manually for now
+                unsigned char *self_slots = server.cluster->myself->slots;
+                bitmapSetBit(self_slots, 1);
+                if (bitmapTestBit(self_slots, 1))
+                {
+                    n = server.cluster->myself;
+                    printf("This thing is working?\n");
+                } else {
+                    printf("not working?\n");
+                    n = server.cluster->slots[slot];
+
+                    /* Error: If a slot is not served, we are in "cluster down"
+                    * state. However the state is yet to be updated, so this was
+                    * not trapped earlier in processCommand(). Report the same
+                    * error to the client. */
+                    if (n == NULL) {
+                        getKeysFreeResult(keyindex);
+                        if (error_code)
+                            *error_code = CLUSTER_REDIR_DOWN_UNBOUND;
+                        return NULL;
+                    }
                 }
+
 
                 /* If we are migrating or importing this slot, we need to check
                  * if we have all the keys in the request (the only way we
