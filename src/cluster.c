@@ -4485,10 +4485,11 @@ void clusterCommand(client *c) {
         }
 
         /* Can't replicate a slave. */
+        /** MOD
         if (nodeIsSlave(n)) {
             addReplyError(c,"I can only replicate a master, not a slave.");
             return;
-        }
+        }**/
 
         /* If the instance is currently a master, it should have no assigned
          * slots nor keys to accept to replicate some other node.
