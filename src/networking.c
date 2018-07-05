@@ -1308,6 +1308,9 @@ int processMultibulkBuffer(client *c) {
     return C_ERR;
 }
 
+// MOD: maintain a copy of query->buf
+char *temp_buf;
+
 /* This function is called every time, in the client structure 'c', there is
  * more query buffer to process, because we read more data from the socket
  * or because a client was blocked and later reactivated, so there could be
@@ -1315,7 +1318,14 @@ int processMultibulkBuffer(client *c) {
 void processInputBuffer(client *c) {
     server.current_client = c;
     /* Keep processing while there is something in the input buffer */
+
+    // MOD: maintain a copy of query->buf
+    temp_buf = malloc(1000);
+
     while(sdslen(c->querybuf)) {
+        // MOD: maintain a copy of query->buf
+        strcpy(temp_buf, c->querybuf);
+        
         /* Return if clients are paused. */
         if (!(c->flags & CLIENT_SLAVE) && clientsArePaused()) break;
 
@@ -1344,7 +1354,7 @@ void processInputBuffer(client *c) {
             if (processMultibulkBuffer(c) != C_OK) break;
         } else {
             serverPanic("Unknown request type");
-        }
+        }        
 
         /* Multibulk processing could see a <= 0 length. */
         if (c->argc == 0) {
@@ -1371,6 +1381,8 @@ void processInputBuffer(client *c) {
         }
     }
     server.current_client = NULL;
+
+    free(temp_buf);
 }
 
 void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {

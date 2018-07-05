@@ -64,6 +64,8 @@ static int checkStringLength(client *c, long long size) {
 #define OBJ_SET_EX (1<<2)     /* Set if time in seconds is given */
 #define OBJ_SET_PX (1<<3)     /* Set if time in ms in given */
 
+extern char *temp_buf;
+
 void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire, int unit, robj *ok_reply, robj *abort_reply) {
     long long milliseconds = 0; /* initialized to avoid any harmness warning */
 
@@ -90,6 +92,9 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
     if (expire) notifyKeyspaceEvent(NOTIFY_GENERIC,
         "expire",key,c->db->id);
     addReply(c, ok_reply ? ok_reply : shared.ok);
+    // MOD: ?
+    printf("SET QUERY: %s\n", temp_buf);
+
 }
 
 /* SET key value [NX] [XX] [EX <seconds>] [PX <milliseconds>] */
