@@ -3848,8 +3848,10 @@ int verifyClusterConfigWithData(void) {
  * If this node is currently a master, it is turned into a slave. */
 void clusterSetMaster(clusterNode *n) {
     serverAssert(n != myself);
-    serverAssert(myself->numslots == 0);
+    // MOD: duh!
+    //serverAssert(myself->numslots == 0);
 
+    /** MOD: don't set my self as a slave
     if (nodeIsMaster(myself)) {
         myself->flags &= ~(CLUSTER_NODE_MASTER|CLUSTER_NODE_MIGRATE_TO);
         myself->flags |= CLUSTER_NODE_SLAVE;
@@ -3857,10 +3859,11 @@ void clusterSetMaster(clusterNode *n) {
     } else {
         if (myself->slaveof)
             clusterNodeRemoveSlave(myself->slaveof,myself);
-    }
+    }**/
     myself->slaveof = n;
     clusterNodeAddSlave(n,myself);
-    replicationSetMaster(n->ip, n->port);
+    // MOD: dont actually set myself as a slave
+    //replicationSetMaster(n->ip, n->port);
     resetManualFailover();
 }
 
