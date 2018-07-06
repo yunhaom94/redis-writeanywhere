@@ -1632,9 +1632,6 @@ int clusterProcessPacket(clusterLink *link) {
     uint32_t totlen = ntohl(hdr->totlen);
     uint16_t type = ntohs(hdr->type);
 
-    //MOD: adding capability of processing SET
-    printf("MSG type: %d \n", type);
-
     if (type < CLUSTERMSG_TYPE_COUNT)
         server.cluster->stats_bus_messages_received[type]++;
     serverLog(LL_DEBUG,"--- Processing packet of type %d, %lu bytes",
@@ -2088,8 +2085,52 @@ int clusterProcessPacket(clusterLink *link) {
     } else if (type == CLUSTERMSG_TYPE_SET_PUSH) {
         // MOD: now handle SET command pushed by the other node
         char *data = hdr->data.pushset.set.data;
-        printf("RECIEVED: %s\n", data);
+        //printf("RECIEVED: %s\n", data);
 
+        char *token;
+        token = strtok(data, "\r\n");
+        int i = 0;
+        int temp_len = 0;
+        char *key_str = NULL;
+        char *val_str = NULL;
+        int key_len = 0;
+        int val_len = 0;
+
+        //get the key and value of query in a stirng
+        while( token != NULL ) {
+            token = token ; // move up the pointer to get the number
+
+            if (i == 3){
+                key_len = atoi(token + 1); // get rid of $ at the beginning
+
+            } else if (i == 5) {
+                val_len = atoi(token + 1);
+
+            } else if (i == 4) {
+                key_str  = zcalloc(key_len + 1); // null terminator
+                strncpy(key_str, token, key_len + 1);
+
+            } else if (i == 6) {              
+                val_str = zcalloc(val_len + 1);
+                strncpy(val_str, token, val_len + 1);
+
+            }
+            
+            token = strtok(NULL, "\r\n");
+            i++;
+        }
+
+        if (key_str && val_str){
+            robj *key = createRawStringObject(key_str, key_len);
+            robj *val = createRawStringObject(val_str, val_len);
+
+            setKey(&server.db[0], key, val);
+            server.dirty++;
+            notifyKeyspaceEvent(NOTIFY_STRING,"set",key,0);
+            printf("Write data got from another node successed\n");
+        } else {
+            printf("Write data got from another node failed\n");
+        }
     
     } else {
         serverLog(LL_WARNING,"Received unknown packet type: %d", type);
