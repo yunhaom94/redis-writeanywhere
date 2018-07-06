@@ -1632,6 +1632,9 @@ int clusterProcessPacket(clusterLink *link) {
     uint32_t totlen = ntohl(hdr->totlen);
     uint16_t type = ntohs(hdr->type);
 
+    //MOD: adding capability of processing SET
+    printf("MSG type: %d \n", type);
+
     if (type < CLUSTERMSG_TYPE_COUNT)
         server.cluster->stats_bus_messages_received[type]++;
     serverLog(LL_DEBUG,"--- Processing packet of type %d, %lu bytes",
@@ -2133,6 +2136,8 @@ void clusterReadHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     while(1) { /* Read as long as there is data to read. */
         rcvbuflen = sdslen(link->rcvbuf);
+        //MOD:
+            printf("MSG1: %s\n", link->rcvbuf);
         if (rcvbuflen < 8) {
             /* First, obtain the first 8 bytes to get the full message
              * length. */

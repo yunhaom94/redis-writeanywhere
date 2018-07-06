@@ -97,7 +97,10 @@ typedef struct clusterLink {
 #define CLUSTERMSG_TYPE_FAILOVER_AUTH_ACK 6     /* Yes, you have my vote */
 #define CLUSTERMSG_TYPE_UPDATE 7        /* Another node slots configuration */
 #define CLUSTERMSG_TYPE_MFSTART 8       /* Pause clients for manual failover */
-#define CLUSTERMSG_TYPE_COUNT 9         /* Total number of message types. */
+
+#define CLUSTERMSG_TYPE_SET_PUSH 9  // MOD: Push SET command to other nodes in group
+#define CLUSTERMSG_TYPE_COUNT 10         /* Total number of message types. */
+
 
 /* This structure represent elements of node->fail_reports. */
 typedef struct clusterNodeFailReport {
@@ -207,6 +210,11 @@ typedef struct {
     unsigned char slots[CLUSTER_SLOTS/8]; /* Slots bitmap. */
 } clusterMsgDataUpdate;
 
+// MOD: push SET
+typedef struct {
+    unsigned char data[1000]; /* Slots bitmap. */
+} clusterMsgPushSet;
+
 union clusterMsgData {
     /* PING, MEET and PONG */
     struct {
@@ -228,6 +236,11 @@ union clusterMsgData {
     struct {
         clusterMsgDataUpdate nodecfg;
     } update;
+
+    // MOD: push SET
+    struct {
+        clusterMsgPushSet set;
+    } pushset;
 };
 
 #define CLUSTER_PROTO_VER 1 /* Cluster bus protocol version. */
@@ -272,6 +285,6 @@ void clusterRedirectClient(client *c, clusterNode *n, int hashslot, int error_co
 
 // MOD: declaring this becaused used elsewhere
 void clusterSendMessage(clusterLink *link, unsigned char *msg, size_t msglen);
-
+void clusterBuildMessageHdr(clusterMsg *hdr, int type);
 #endif /* __CLUSTER_H */
 

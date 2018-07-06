@@ -94,13 +94,11 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
     if (expire) notifyKeyspaceEvent(NOTIFY_GENERIC,
         "expire",key,c->db->id);
     addReply(c, ok_reply ? ok_reply : shared.ok);
+
     // MOD: Sending the set query to "slaves" (nodes in group)
     // for pushing updates
-    
-    
-    if (server.cluster_enabled)
+    if (server.cluster_enabled && temp_buf)
     {
-        printf("SET QUERY: %s\n", temp_buf);
         struct clusterState *cluster = server.cluster;
         clusterNode *myself = cluster->myself;
         int num_slaves = myself->numslaves;
@@ -108,10 +106,17 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
         for (int i = 0; i < num_slaves; i++)
         {
             clusterNode *n = myself->slaves[i];
-            int port = n->port;
-            char *ip = n->ip;
-            printf("Trying to send to group node %d\n", i);
-            clusterSendMessage(lk, (unsigned char *)temp_buf, sdslen(temp_buf));
+            clusterLink *lk = n->link;
+            printf("Trying to send %s to group node %d\n", temp_buf, i);
+
+            // just assgin 1000 bytes, should be enough
+            clusterMsg* hdr = (clusterMsg*)zcalloc(2000);
+            clusterBuildMessageHdr(hdr, CLUSTERMSG_TYPE_SET_PUSH);
+            hdr->totlen = sizeof(clusterMsg) + sdslen(temp_buf);
+            
+            memcpy(hdr->data.pushset.set.data, temp_buf, sdslen(temp_buf));
+
+            clusterSendMessage(lk, (unsigned char *)hdr, hdr->totlen);
 
         }
 
