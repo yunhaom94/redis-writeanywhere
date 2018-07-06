@@ -212,7 +212,7 @@ typedef struct {
 
 // MOD: push SET
 typedef struct {
-    unsigned char data[1000]; /* Slots bitmap. */
+    char data[1000]; /* Slots bitmap. */
 } clusterMsgPushSet;
 
 union clusterMsgData {

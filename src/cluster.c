@@ -2085,6 +2085,12 @@ int clusterProcessPacket(clusterLink *link) {
         // configueration when assigning slots to the same node
         //clusterUpdateSlotsConfigWith(n,reportedConfigEpoch,
         //    hdr->data.update.nodecfg.slots);
+    } else if (type == CLUSTERMSG_TYPE_SET_PUSH) {
+        // MOD: now handle SET command pushed by the other node
+        char *data = hdr->data.pushset.set.data;
+        printf("RECIEVED: %s\n", data);
+
+    
     } else {
         serverLog(LL_WARNING,"Received unknown packet type: %d", type);
     }
@@ -2136,8 +2142,6 @@ void clusterReadHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     while(1) { /* Read as long as there is data to read. */
         rcvbuflen = sdslen(link->rcvbuf);
-        //MOD:
-            printf("MSG1: %s\n", link->rcvbuf);
         if (rcvbuflen < 8) {
             /* First, obtain the first 8 bytes to get the full message
              * length. */

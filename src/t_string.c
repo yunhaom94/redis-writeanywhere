@@ -107,16 +107,15 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
         {
             clusterNode *n = myself->slaves[i];
             clusterLink *lk = n->link;
-            printf("Trying to send %s to group node %d\n", temp_buf, i);
-
+            
             // just assgin 1000 bytes, should be enough
             clusterMsg* hdr = (clusterMsg*)zcalloc(2000);
             clusterBuildMessageHdr(hdr, CLUSTERMSG_TYPE_SET_PUSH);
-            hdr->totlen = sizeof(clusterMsg) + sdslen(temp_buf);
-            
-            memcpy(hdr->data.pushset.set.data, temp_buf, sdslen(temp_buf));
-
-            clusterSendMessage(lk, (unsigned char *)hdr, hdr->totlen);
+            int len = sizeof(clusterMsg) - sizeof(union clusterMsgData) + sizeof(clusterMsgPushSet);
+            hdr->totlen = htonl(len);
+            strncpy(hdr->data.pushset.set.data, temp_buf, strlen(temp_buf));
+            printf("Trying to send %s to group node %d with len %d\n", hdr->data.pushset.set.data, i, strlen(temp_buf));
+            clusterSendMessage(lk, (unsigned char *)hdr, len);
 
         }
 
