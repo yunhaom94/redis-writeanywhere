@@ -28,6 +28,7 @@
  */
 
 #include "server.h"
+#include "cluster.h"
 #include <math.h> /* isnan(), isinf() */
 
 /*-----------------------------------------------------------------------------
@@ -65,6 +66,7 @@ static int checkStringLength(client *c, long long size) {
 #define OBJ_SET_PX (1<<3)     /* Set if time in ms in given */
 
 extern char *temp_buf;
+extern int *temp_len;
 
 void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire, int unit, robj *ok_reply, robj *abort_reply) {
     long long milliseconds = 0; /* initialized to avoid any harmness warning */
@@ -92,8 +94,29 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
     if (expire) notifyKeyspaceEvent(NOTIFY_GENERIC,
         "expire",key,c->db->id);
     addReply(c, ok_reply ? ok_reply : shared.ok);
-    // MOD: ?
-    printf("SET QUERY: %s\n", temp_buf);
+    // MOD: Sending the set query to "slaves" (nodes in group)
+    // for pushing updates
+    
+    
+    if (server.cluster_enabled)
+    {
+        printf("SET QUERY: %s\n", temp_buf);
+        struct clusterState *cluster = server.cluster;
+        clusterNode *myself = cluster->myself;
+        int num_slaves = myself->numslaves;
+        // loop through "slaves"
+        for (int i = 0; i < num_slaves; i++)
+        {
+            clusterNode *n = myself->slaves[i];
+            int port = n->port;
+            char *ip = n->ip;
+            printf("Trying to send to group node %d\n", i);
+            clusterSendMessage(lk, (unsigned char *)temp_buf, sdslen(temp_buf));
+
+        }
+
+
+    }
 
 }
 

@@ -270,4 +270,8 @@ clusterNode *getNodeByQuery(client *c, struct redisCommand *cmd, robj **argv, in
 int clusterRedirectBlockedClientIfNeeded(client *c);
 void clusterRedirectClient(client *c, clusterNode *n, int hashslot, int error_code);
 
+// MOD: declaring this becaused used elsewhere
+void clusterSendMessage(clusterLink *link, unsigned char *msg, size_t msglen);
+
 #endif /* __CLUSTER_H */
+
