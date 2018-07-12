@@ -1205,6 +1205,10 @@ struct redisServer {
     pthread_mutex_t lruclock_mutex;
     pthread_mutex_t next_client_id_mutex;
     pthread_mutex_t unixtime_mutex;
+
+    // MOD: used to send message to the client from else where
+    client *last_client; 
+
 };
 
 typedef struct pubsubPattern {

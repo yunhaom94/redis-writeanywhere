@@ -2085,7 +2085,7 @@ int clusterProcessPacket(clusterLink *link) {
     } else if (type == CLUSTERMSG_TYPE_SET_PUSH) {
         // MOD: now handle SET command pushed by the other node
         char *data = hdr->data.pushset.set.data;
-        //printf("RECIEVED: %s\n", data);
+        printf("Recieved PUSHSET: %s\n", data);
 
         char *token;
         token = strtok(data, "\r\n");
@@ -2128,9 +2128,34 @@ int clusterProcessPacket(clusterLink *link) {
             server.dirty++;
             notifyKeyspaceEvent(NOTIFY_STRING,"set",key,0);
             printf("Write data got from another node successed\n");
+
+            // send OK back to the node
+            clusterMsg* hdr = (clusterMsg*)zcalloc(sizeof(clusterMsg));
+            clusterBuildMessageHdr(hdr, CLUSTERMSG_TYPE_SETPUSH_OK);
+            hdr->totlen = htonl(sizeof(clusterMsg));
+            clusterSendMessage(link, (unsigned char *)hdr, sizeof(clusterMsg));
+            zfree(hdr);
+
         } else {
             printf("Write data got from another node failed\n");
         }
+    
+    } else if (type == CLUSTERMSG_TYPE_SETPUSH_OK) {
+        // MOD: recived send push OK
+        printf("Recieved a SETPUSH OK\n");
+        // increment this counter
+        server.cluster->setpush_reponsed++;
+
+        // when recieved all other nodes' OK reply
+        if (server.cluster->setpush_reponsed == server.cluster->myself->numslaves && server.last_client)
+        {
+            // send yes to client
+            // Maybe more checks are needed IRL
+            printf("Sending client OK\n");
+            addReply(server.last_client, shared.ok);
+            server.last_client = NULL;
+        }
+        else { printf("Not sending OK, something is wrong\n"); }
     
     } else {
         serverLog(LL_WARNING,"Received unknown packet type: %d", type);
@@ -4224,7 +4249,6 @@ void clusterCommand(client *c) {
         unsigned char *slots = zmalloc(CLUSTER_SLOTS);
         int del = !strcasecmp(c->argv[1]->ptr,"delslots");
         // MOD: printf
-        printf("I AM ADDING A SLOT TO THIS NDOE!\n");
         memset(slots,0,CLUSTER_SLOTS);
         /* Check that all the arguments are parseable and that all the
          * slots are not already busy. */
@@ -5405,9 +5429,7 @@ clusterNode *getNodeByQuery(client *c, struct redisCommand *cmd, robj **argv, in
                 if (bitmapTestBit(self_slots, 1))
                 {
                     n = server.cluster->myself;
-                    printf("This thing is working?\n");
                 } else {
-                    printf("not working?\n");
                     n = server.cluster->slots[slot];
 
                     /* Error: If a slot is not served, we are in "cluster down"

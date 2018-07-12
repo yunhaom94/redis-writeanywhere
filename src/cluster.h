@@ -99,7 +99,8 @@ typedef struct clusterLink {
 #define CLUSTERMSG_TYPE_MFSTART 8       /* Pause clients for manual failover */
 
 #define CLUSTERMSG_TYPE_SET_PUSH 9  // MOD: Push SET command to other nodes in group
-#define CLUSTERMSG_TYPE_COUNT 10         /* Total number of message types. */
+#define CLUSTERMSG_TYPE_SETPUSH_OK 10 // MOD: PUSH SET replies OK
+#define CLUSTERMSG_TYPE_COUNT 11         /* Total number of message types. */
 
 
 /* This structure represent elements of node->fail_reports. */
@@ -173,6 +174,10 @@ typedef struct clusterState {
     long long stats_bus_messages_received[CLUSTERMSG_TYPE_COUNT];
     long long stats_pfail_nodes;    /* Number of nodes in PFAIL status,
                                        excluding nodes without address. */
+    // MOD: # of othjer nodes in the group has reponsed to myself's 
+    // pushset command
+    int setpush_reponsed;  
+
 } clusterState;
 
 /* Redis cluster messages header */

@@ -93,7 +93,12 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
     notifyKeyspaceEvent(NOTIFY_STRING,"set",key,c->db->id);
     if (expire) notifyKeyspaceEvent(NOTIFY_GENERIC,
         "expire",key,c->db->id);
-    addReply(c, ok_reply ? ok_reply : shared.ok);
+    // MOD: no longer reply client here
+    // set the number of pushset node that reponsed OK
+    // and will handle this in cluster packet processor
+    //addReply(c, ok_reply ? ok_reply : shared.ok);
+    server.cluster->setpush_reponsed = 0;
+    server.last_client = c;
 
     // MOD: Sending the set query to "slaves" (nodes in group)
     // for pushing updates
@@ -116,6 +121,7 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
             strncpy(hdr->data.pushset.set.data, temp_buf, strlen(temp_buf));
             printf("Trying to send %s to group node %d with len %d\n", hdr->data.pushset.set.data, i, strlen(temp_buf));
             clusterSendMessage(lk, (unsigned char *)hdr, len);
+            zfree(hdr);
 
         }
 
