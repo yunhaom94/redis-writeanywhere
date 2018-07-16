@@ -1,0 +1,4 @@
+total run time: 111.04667925834656s 
+number of total operations with 50% Set and 50% Get: 1000000 
+avg. throughput: 9005.222008246927 ops/s 
+avg. latency: 0.00011104667925834657 s
