@@ -2,6 +2,7 @@
 import argparse
 import subprocess
 import os
+import time
 
 
 '''
@@ -31,7 +32,7 @@ appendonly-{port}.aof --dbfilename dump-{port}.rdb --logfile {port}.log \
         #print(cmd)
 
     print("Please wait for the cluster to be set up...")
-
+    time.sleep(1) # wait for the cluster to run
     # meeting
     for i in range(1, num_nodes):
         port = port_base + i

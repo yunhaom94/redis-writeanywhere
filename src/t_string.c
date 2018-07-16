@@ -107,6 +107,13 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
         struct clusterState *cluster = server.cluster;
         clusterNode *myself = cluster->myself;
         int num_slaves = myself->numslaves;
+
+        if (num_slaves == 0)
+        {
+            addReply(c, ok_reply ? ok_reply : shared.ok);
+            return;
+        }
+
         // loop through "slaves"
         for (int i = 0; i < num_slaves; i++)
         {
@@ -124,7 +131,6 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
             zfree(hdr);
 
         }
-
 
     }
 
