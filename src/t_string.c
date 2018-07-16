@@ -120,8 +120,9 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
             clusterNode *n = myself->slaves[i];
             clusterLink *lk = n->link;
             
-            // just assgin 1000 bytes, should be enough
-            clusterMsg* hdr = (clusterMsg*)zcalloc(2000);
+            // just assgin 1000 bytes, should be enough < NOT enough!!! 
+            // memory gone overbound and messed up a lot of things!!
+            clusterMsg* hdr = (clusterMsg*)zcalloc(5000);
             clusterBuildMessageHdr(hdr, CLUSTERMSG_TYPE_SET_PUSH);
             int len = sizeof(clusterMsg) - sizeof(union clusterMsgData) + sizeof(clusterMsgPushSet);
             hdr->totlen = htonl(len);

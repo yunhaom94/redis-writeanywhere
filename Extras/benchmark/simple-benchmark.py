@@ -9,8 +9,8 @@ import redis
 
 if __name__ == "__main__": 
 
-    size = 500000
-    port = 7001
+    size = 50000
+    port = 7000
     FNULL = open(os.devnull, 'w')
 
     test_set = {}
