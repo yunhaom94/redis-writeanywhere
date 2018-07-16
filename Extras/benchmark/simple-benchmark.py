@@ -9,8 +9,8 @@ import redis
 
 if __name__ == "__main__": 
 
-    size = 50000
-    port = 7000
+    size = 500 # TODO: make is an command line argument
+    port = 5000
     FNULL = open(os.devnull, 'w')
 
     test_set = {}

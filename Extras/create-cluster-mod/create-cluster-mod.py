@@ -42,7 +42,8 @@ appendonly-{port}.aof --dbfilename dump-{port}.rdb --logfile {port}.log \
 
 
     # setting slots:
-    for i in range(0, num_nodes):
+    # TODO: this is slow
+    for i in range(0, num_nodes): 
         port = port_base + i
         for s in range(0, 16384):
             cmd = "../../src/redis-cli -p {port} CLUSTER ADDSLOTS {s}".format(port=port, s=s)

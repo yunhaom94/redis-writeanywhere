@@ -109,8 +109,6 @@ class CommandHandler():
 
 
     def proxy_query(self, query, client):
-
-        print("Forwarding: " +  str(query))
         
         for n in self.node_connections:
             n._sock.sendall(query)
@@ -122,11 +120,9 @@ class CommandHandler():
                 break
 
             for n in self.node_connections:
-                server_reponse = self.get_response(n._sock, 0.1)
+                server_reponse = self.get_response(n._sock)
 
                 if not bflag and server_reponse != b'':
-                    print("One node replied OK")
-                    print("Response: " + str(server_reponse))
                     bflag = True # finish the for loop to read the rest of the recv buffer
                     client.sendall(server_reponse)
 
@@ -136,12 +132,12 @@ class CommandHandler():
         
                 
         
-    def get_response(self, sock, timeout=0.1):
+    def get_response(self, sock, timeout=0.01):
         server_reponse = b''
 
         while True:
             try:
-                sock.settimeout(0.1)
+                sock.settimeout(timeout) # TODO: this is slow
                 data = sock.recv(1024)
             
                 if data:
