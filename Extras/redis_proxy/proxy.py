@@ -87,8 +87,8 @@ class CommandHandler():
         # Create a TCP/IP socket
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        print('Proxy listening to port 7000')
-        self.client_socket.bind(('localhost', 7000)) # 7000 as listening port
+        print('Proxy listening to port 8000')
+        self.client_socket.bind(('localhost', 8000)) # 7000 as listening port
 
         # Listen for incoming connections
         self.client_socket.listen(1) # only accept 1 client
@@ -159,6 +159,8 @@ class CommandHandler():
             return
 
         temp = query.decode("utf-8").split()
+
+        print(temp)
 
         # has to be at east "*2...."
         if int(temp[0][1]) >= 2:
